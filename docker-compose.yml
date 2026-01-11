@@ -1,0 +1,9 @@
+services:
+  discord-bot:
+    build: .
+    container_name: discord-bot
+    restart: unless-stopped
+    environment:
+      - DISCORD_TOKEN=${DISCORD_TOKEN}
+      - TEMP_VOICE_CHANNEL_ID=${TEMP_VOICE_CHANNEL_ID}
+      - NODE_ENV=production

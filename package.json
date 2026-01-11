@@ -1,0 +1,26 @@
+{
+  "name": "botonku",
+  "version": "1.0.0",
+  "description": "bot discor",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/CatChow0/ProjectCode-All.git"
+  },
+  "author": "CatChow",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/CatChow0/ProjectCode-All/issues"
+  },
+  "homepage": "https://github.com/CatChow0/ProjectCode-All#readme",
+  "dependencies": {
+    "@discordjs/rest": "^1.4.0",
+    "discord.js": "^14.7.1",
+    "express": "^5.1.0",
+    "fs": "^0.0.1-security",
+    "ms": "^2.1.3"
+  }
+}
