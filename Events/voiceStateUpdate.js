@@ -4,6 +4,7 @@ const pokedex = require('../pokedex.json');
 const communes = require('../france.json');
 const WorkerManager = require('../WorkerManager');
 const safePlaceManager = require('../safePlaceManager');
+const nicknameStore = require('../nicknameStore');
 
 module.exports = async (bot, oldState, newState) => {
     const workerManager = new WorkerManager();
@@ -212,6 +213,12 @@ module.exports = async (bot, oldState, newState) => {
         const nicknamePromises = [];
 
         if (newState.member.roles.cache.has(chiengRoleId)) {
+            // Save original nickname before changing
+            try {
+                nicknameStore.setOriginal(newState.guild.id, newState.member.id, newState.member.nickname ?? null);
+            } catch (err) {
+                console.error('Erreur sauvegarde pseudo original:', err);
+            }
             const newNickname = generateNicknameChieng();
             nicknamePromises.push(
                 newState.member.setNickname(newNickname)
@@ -221,6 +228,12 @@ module.exports = async (bot, oldState, newState) => {
         }
 
         if (newState.member.roles.cache.has(pokemonRoleId)) {
+            // Save original nickname before changing
+            try {
+                nicknameStore.setOriginal(newState.guild.id, newState.member.id, newState.member.nickname ?? null);
+            } catch (err) {
+                console.error('Erreur sauvegarde pseudo original:', err);
+            }
             const newNickname = generateNicknamePokemon();
             nicknamePromises.push(
                 newState.member.setNickname(newNickname)
@@ -239,6 +252,12 @@ module.exports = async (bot, oldState, newState) => {
         const nicknamePromises = [];
 
         if (newState.member.roles.cache.has(chiengRoleId)) {
+            // Save original nickname before changing
+            try {
+                nicknameStore.setOriginal(newState.guild.id, newState.member.id, newState.member.nickname ?? null);
+            } catch (err) {
+                console.error('Erreur sauvegarde pseudo original:', err);
+            }
             const newNickname = generateNicknameChieng();
             nicknamePromises.push(
                 newState.member.setNickname(newNickname)
@@ -248,6 +267,12 @@ module.exports = async (bot, oldState, newState) => {
         }
 
         if (newState.member.roles.cache.has(pokemonRoleId)) {
+            // Save original nickname before changing
+            try {
+                nicknameStore.setOriginal(newState.guild.id, newState.member.id, newState.member.nickname ?? null);
+            } catch (err) {
+                console.error('Erreur sauvegarde pseudo original:', err);
+            }
             const newNickname = generateNicknamePokemon();
             nicknamePromises.push(
                 newState.member.setNickname(newNickname)
@@ -284,6 +309,20 @@ module.exports = async (bot, oldState, newState) => {
                     console.error('Erreur fallback suppression:', fallbackError);
                 }
             });
+    }
+
+    // Restaurer le pseudo original si l'utilisateur quitte un salon temporaire
+    if (oldState.channel && isTempChannel(oldState.channel.name) && (!newState.channel || !isTempChannel(newState.channel.name))) {
+        try {
+            const original = nicknameStore.popOriginal(oldState.guild.id, oldState.member.id);
+            if (original !== undefined) {
+                await oldState.member.setNickname(original)
+                    .then(() => console.log(`Pseudo restauré pour ${oldState.member.id}: ${original}`))
+                    .catch(err => console.error('Erreur restauration pseudo:', err));
+            }
+        } catch (err) {
+            console.error('Erreur lors de la tentative de restauration du pseudo original:', err);
+        }
     }
 
     // Gérer la destruction des Safe-Places vocaux vides
