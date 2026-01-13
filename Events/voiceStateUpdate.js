@@ -169,13 +169,8 @@ module.exports = async (bot, oldState, newState) => {
         let channelName;
         const communeNames = getCommuneNames();
         
-        if (newState.member.id === specificUserId) {
-            // Pour l'utilisateur spécifique, choisir une commune spécifique (par exemple la dernière)
-            channelName = "kinshasa - RDC";
-        } else {
-            // Pour les autres, choisir une commune aléatoire
-            channelName = getRandomName(communeNames);
-        }
+        // Pour les autres, choisir une commune aléatoire
+        channelName = getRandomName(communeNames);
 
         const parentCategory = newState.channel.parent;
         const permissionOverwrites = parentCategory.permissionOverwrites.cache.map(overwrite => ({
