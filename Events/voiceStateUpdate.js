@@ -8,11 +8,8 @@ const safePlaceManager = require('../safePlaceManager');
 module.exports = async (bot, oldState, newState) => {
     const workerManager = new WorkerManager();
     const tempVoiceChannelId = config.tempVoiceChannelId;
-    const specificUserId = "360476690021089290";
-    const nicknameUserId = "461162487270604800";
-    const specificRoleId = "1426612733322985583";
-    const chiengId = "635966333590437908";
-    const pokemonRoleId = "1387810347636752498"; // Remplacez par l'ID du rôle pour les pseudos Pokemon
+    const pokemonRoleId = config.pokemonRoleId;
+    const chiengRoleId = config.chiengRoleId;
 
     // Fonction pour récupérer les noms des communes françaises
     const getCommuneNames = () => {
@@ -30,7 +27,7 @@ module.exports = async (bot, oldState, newState) => {
     };
 
     // Listes pour générer des pseudos Pokemon
-    const prefixesPokemon = [
+    const prefixes = [
         "Gros",
         "Petit",
         "Grand",
@@ -53,18 +50,8 @@ module.exports = async (bot, oldState, newState) => {
             .map(pokemon => pokemon.name.fr);
     };
 
-    const suffixesPokemon = [
-        "de merde",
-        "de ta mère",
+    const suffixes = [
         "montagneux"
-    ];
-
-    // Listes pour générer des pseudos pour chieng
-    const prefixesChieng = [
-        "Gros",
-        "Petit",
-        "Grand",
-        "Sale"
     ];
 
     const objectsChieng = [
@@ -110,63 +97,11 @@ module.exports = async (bot, oldState, newState) => {
         "chien de guide",
         "chieng",
         "chien de la casse",
-        "chien goulag",
+        "chien des goulag",
         "chien de la rue",
         "chien goulue",
     ];
 
-
-    // Listes pour générer des pseudos
-    const prefixesMasculin = [
-        "Gros",
-        "Petit",
-        "Grand",
-        "Sale",
-        "Fils de",
-        "Enfant de"
-    ];
-
-    const prefixesFeminin = [
-        "Grosse",
-        "Petite",
-        "Sale",
-        "Fille de",
-        "Enfant de"
-    ];
-
-    const objectsMasculin = [
-        "soumis",
-        "chien",
-        "rat",
-        "salaud",
-        "enculé",
-        "connard"
-    ];
-
-    const objectsFeminin = [
-        "soumise",
-        "chienne",
-        "rat",
-        "salope",
-        "enculée",
-        "connasse",
-        "pute",
-        "serpillère",
-    ];
-
-    const suffixesMasculin = [
-        "de merde",
-        "a foutre",
-        "de ta mère",
-        "noir"
-    ];
-
-    const suffixesFeminin = [
-        "de merde",
-        "a foutre",
-        "de ta mère",
-        "noire"
-    ];
 
     // Fonction pour obtenir un nom aléatoire de la liste chieng
     const getRandomNameChieng = (list) => {
@@ -180,7 +115,7 @@ module.exports = async (bot, oldState, newState) => {
 
     // Fonction pour générer un pseudo en combinant un préfix et un objet des list chieng
     const generateNicknameChieng = () => {
-        const prefix = getRandomNameChieng(prefixesChieng);
+        const prefix = getRandomNameChieng(prefixes);
         const object = getRandomNameChieng(objectsChieng);
 
         return `${prefix} ${object}`.trim().replace(/\s+/g, ' ');
@@ -191,40 +126,11 @@ module.exports = async (bot, oldState, newState) => {
         const usePrefix = Math.random() > 0.3;
         const useSuffix = Math.random() > 0.3;
         
-        const prefix = usePrefix ? getRandomName(prefixesPokemon) : '';
+        const prefix = usePrefix ? getRandomName(prefixes) : '';
         const pokemon = getRandomName(getPokemonNames());
-        const suffix = useSuffix ? getRandomName(suffixesPokemon) : '';
+        const suffix = useSuffix ? getRandomName(suffixes) : '';
 
         return `${prefix} ${pokemon} ${suffix}`.trim().replace(/\s+/g, ' ');
-    };
-
-    // Fonction pour générer un pseudo en combinant un préfixe, un objet et un suffixe en fonction du genre
-    const generateNicknameMasculin = () => {
-        const usePrefix = Math.random() > 0.5;
-        const useObject = Math.random() > 0.35;
-        const useSuffix = Math.random() > 0.5;
-    
-        const prefix = usePrefix || !useObject ? getRandomName(prefixesMasculin) : '';
-        const object = useObject ? getRandomName(objectsMasculin) : '';
-        const suffix = useSuffix || !useObject ? getRandomName(suffixesMasculin) : '';
-    
-        return `${prefix} ${object} ${suffix}`.trim().replace(/\s+/g, ' ');
-    };
-    
-    const generateNicknameFeminin = () => {
-        const usePrefix = Math.random() > 0.5;
-        const useObject = Math.random() > 0.35;
-        const useSuffix = Math.random() > 0.5;
-    
-        const prefix = usePrefix || !useObject ? getRandomName(prefixesFeminin) : '';
-        const object = useObject ? getRandomName(objectsFeminin) : '';
-        const suffix = useSuffix || !useObject ? getRandomName(suffixesFeminin) : '';
-    
-        return `${prefix} ${object} ${suffix}`.trim().replace(/\s+/g, ' ');
-    };
-
-    const generateNickname = () => {
-        return Math.random() < 0.5 ? generateNicknameMasculin() : generateNicknameFeminin();
     };
 
     // Fonction pour vérifier si le nom du salon correspond à un nom de commune française
@@ -310,7 +216,7 @@ module.exports = async (bot, oldState, newState) => {
         // Gérer les changements de pseudo de manière asynchrone mais avec le bot principal
         const nicknamePromises = [];
 
-        if (newState.member.id === chiengId) {
+        if (newState.member.roles.cache.has(chiengRoleId)) {
             const newNickname = generateNicknameChieng();
             nicknamePromises.push(
                 newState.member.setNickname(newNickname)
@@ -325,15 +231,6 @@ module.exports = async (bot, oldState, newState) => {
                 newState.member.setNickname(newNickname)
                     .then(() => console.log(`Pseudo Pokemon changé: ${newNickname}`))
                     .catch(error => console.error('Erreur changement pseudo Pokemon:', error))
-            );
-        }
-
-        if (newState.member.roles.cache.has(specificRoleId)) {
-            const newNickname = generateNickname();
-            nicknamePromises.push(
-                newState.member.setNickname(newNickname)
-                    .then(() => console.log(`Pseudo général changé: ${newNickname}`))
-                    .catch(error => console.error('Erreur changement pseudo général:', error))
             );
         }
 
@@ -346,7 +243,7 @@ module.exports = async (bot, oldState, newState) => {
         // Gérer les changements de pseudo de manière asynchrone pour les salons existants
         const nicknamePromises = [];
 
-        if (newState.member.id === chiengId) {
+        if (newState.member.roles.cache.has(chiengRoleId)) {
             const newNickname = generateNicknameChieng();
             nicknamePromises.push(
                 newState.member.setNickname(newNickname)
@@ -361,15 +258,6 @@ module.exports = async (bot, oldState, newState) => {
                 newState.member.setNickname(newNickname)
                     .then(() => console.log(`Pseudo Pokemon changé: ${newNickname}`))
                     .catch(error => console.error('Erreur changement pseudo Pokemon:', error))
-            );
-        }
-
-        if (newState.member.roles.cache.has(specificRoleId)) {
-            const newNickname = generateNickname();
-            nicknamePromises.push(
-                newState.member.setNickname(newNickname)
-                    .then(() => console.log(`Pseudo général changé: ${newNickname}`))
-                    .catch(error => console.error('Erreur changement pseudo général:', error))
             );
         }
 
