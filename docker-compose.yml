@@ -4,6 +4,8 @@ services:
     container_name: discord-bot
     restart: unless-stopped
     environment:
+      - NODE_ENV=production
       - DISCORD_TOKEN=${DISCORD_TOKEN}
       - TEMP_VOICE_CHANNEL_ID=${TEMP_VOICE_CHANNEL_ID}
-      - NODE_ENV=production
+      - POKEMON_ROLE_ID=${POKEMON_ROLE_ID}
+      - CHIENG_ROLE_ID=${CHIENG_ROLE_ID}
