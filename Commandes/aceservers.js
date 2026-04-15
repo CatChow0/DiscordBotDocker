@@ -29,10 +29,8 @@ function readEnvFile(filePath) {
     if (!fs.existsSync(filePath)) {
         throw new Error(`Fichier .env introuvable: ${filePath}`);
     }
-
     const content = fs.readFileSync(filePath, 'utf8');
     const lines = content.split(/\r?\n/);
-
     const env = {};
     for (const line of lines) {
         if (!line || line.trim().startsWith('#')) continue;
@@ -42,7 +40,6 @@ function readEnvFile(filePath) {
         const value = line.slice(index + 1);
         env[key] = value;
     }
-
     return { env, lines };
 }
 
@@ -56,13 +53,10 @@ function parseAcevoArgs(argsString) {
         serverconfig: null,
         seasondefinition: null
     };
-
-    const serverMatch = argsString.match(/-serverconfig\s+(\S+)/);
-    const seasonMatch = argsString.match(/-seasondefinition\s+(\S+)/);
-
+    const serverMatch = argsString.match(/-serverconfig\s+([^\s]+)/);
+    const seasonMatch = argsString.match(/-seasondefinition\s+([^\s]+)/);
     if (serverMatch) result.serverconfig = serverMatch[1];
     if (seasonMatch) result.seasondefinition = seasonMatch[1];
-
     return result;
 }
 
@@ -101,14 +95,8 @@ module.exports = {
             maxValue: 200
         },
         {
-            name: 'serverconfig',
-            description: 'Nouvelle valeur pour -serverconfig',
-            type: 'String',
-            required: false
-        },
-        {
-            name: 'seasondefinition',
-            description: 'Nouvelle valeur pour -seasondefinition',
+            name: 'args',
+            description: '-serverconfig ... -seasondefinition ... (copié-collé)',
             type: 'String',
             required: false
         }
@@ -118,7 +106,7 @@ module.exports = {
         try {
             if (!interaction.member.roles.cache.has(ADMIN_ROLE_ID)) {
                 return await interaction.reply({
-                    content: '❌ Vous n\'avez pas les permissions nécessaires pour utiliser cette commande.',
+                    content: '❌ Vous n\'avez pas les permissions nécessaires.',
                     ephemeral: true
                 });
             }
@@ -139,20 +127,17 @@ module.exports = {
                     content:
                         `📋 **État du serveur Assetto**\n\n` +
                         `**Container :** \`${CONTAINER_NAME}\`\n` +
-                        `**Service Compose :** \`${SERVICE_NAME}\`\n` +
+                        `**Service :** \`${SERVICE_NAME}\`\n` +
                         `**Status :** \`${state.Status}\`\n` +
                         `**Running :** ${state.Running ? 'Oui' : 'Non'}\n` +
-                        `**StartedAt :** \`${state.StartedAt}\`\n` +
-                        `**serverconfig :** ${parsed.serverconfig ? `\`${parsed.serverconfig.slice(0, 80)}${parsed.serverconfig.length > 80 ? '…' : ''}\`` : '`absent`'}\n` +
-                        `**seasondefinition :** ${parsed.seasondefinition ? `\`${parsed.seasondefinition.slice(0, 80)}${parsed.seasondefinition.length > 80 ? '…' : ''}\`` : '`absent`'}`
+                        `**Uptime :** ${state.Running ? Math.round((Date.now() - new Date(state.StartedAt).getTime()) / 60000) + ' min' : 'N/A'}\n` +
+                        `**ACEVO_ARGS** : \`${acevoArgs.slice(0, 100)}${acevoArgs.length > 100 ? '…' : ''}\``
                 });
             }
 
             if (action === 'restart') {
                 await container.restart();
-                return await interaction.editReply({
-                    content: '✅ Le container Assetto Corsa a été redémarré avec succès.'
-                });
+                return await interaction.editReply('✅ Container redémarré.');
             }
 
             if (action === 'logs') {
@@ -163,104 +148,62 @@ module.exports = {
                     tail: lines,
                     timestamps: true
                 });
-
                 const content = logs.toString('utf8').trim();
-
                 if (!content) {
-                    return await interaction.editReply({
-                        content: '📭 Aucun log disponible.'
-                    });
+                    return await interaction.editReply('📭 Aucun log disponible.');
                 }
-
                 if (content.length <= 1800) {
-                    return await interaction.editReply({
-                        content: `📋 **${lines} dernières lignes :**\n\`\`\`\n${content}\n\`\`\``
-                    });
+                    return await interaction.editReply(`📋 **${lines} lignes :**\n\`\`\`\n${content}\n\`\`\``);
                 }
-
                 const attachment = new AttachmentBuilder(
                     Buffer.from(content, 'utf8'),
                     { name: `acevo-logs-${Date.now()}.txt` }
                 );
-
                 return await interaction.editReply({
-                    content: `📄 Logs trop longs pour Discord, envoi en fichier (${lines} lignes).`,
+                    content: `📄 Logs en fichier (${lines} lignes).`,
                     files: [attachment]
                 });
             }
 
             if (action === 'update') {
-                const newServerConfig = interaction.options.getString('serverconfig');
-                const newSeasonDefinition = interaction.options.getString('seasondefinition');
+                const newArgs = interaction.options.getString('args');
+                if (!newArgs) {
+                    return await interaction.editReply('❌ Fournissez `args` : `-serverconfig ... -seasondefinition ...`');
+                }
 
-                if (!newServerConfig && !newSeasonDefinition) {
-                    return await interaction.editReply({
-                        content: '❌ Vous devez fournir au moins `serverconfig` ou `seasondefinition`.'
-                    });
+                const parsed = parseAcevoArgs(newArgs);
+                if (!parsed.serverconfig || !parsed.seasondefinition) {
+                    return await interaction.editReply('❌ `args` doit contenir `-serverconfig` ET `-seasondefinition`.');
                 }
 
                 const envData = readEnvFile(ENV_FILE);
-                const currentArgs = envData.env.ACEVO_ARGS || '';
-                const parsed = parseAcevoArgs(currentArgs);
-
-                const finalServerConfig = newServerConfig || parsed.serverconfig;
-                const finalSeasonDefinition = newSeasonDefinition || parsed.seasondefinition;
-
-                if (!finalServerConfig || !finalSeasonDefinition) {
-                    return await interaction.editReply({
-                        content: '❌ Impossible de reconstruire `ACEVO_ARGS` correctement. Vérifiez le contenu actuel du `.env`.'
-                    });
-                }
-
-                envData.env.ACEVO_ARGS = buildAcevoArgs(finalServerConfig, finalSeasonDefinition);
+                envData.env.ACEVO_ARGS = buildAcevoArgs(parsed.serverconfig, parsed.seasondefinition);
                 writeEnvFile(ENV_FILE, envData.env);
 
                 const cmd = `docker compose -f "${COMPOSE_FILE}" up -d --no-deps --force-recreate ${SERVICE_NAME}`;
                 const result = await execAsync(cmd, { cwd: COMPOSE_DIR });
 
-                let summary = '✅ **Configuration mise à jour et service recréé.**\n\n';
-                if (newServerConfig) {
-                    summary += `- \`serverconfig\` mis à jour\n`;
-                }
-                if (newSeasonDefinition) {
-                    summary += `- \`seasondefinition\` mis à jour\n`;
-                }
-
                 const output = `${result.stdout || ''}\n${result.stderr || ''}`.trim();
-                if (output) {
-                    const shortOutput = output.length > 1200 ? `${output.slice(0, 1200)}\n...` : output;
-                    summary += `\n\`\`\`\n${shortOutput}\n\`\`\``;
-                }
+                const shortOutput = output.length > 1200 ? `${output.slice(0, 1200)}…` : output;
 
                 return await interaction.editReply({
-                    content: summary
+                    content:
+                        `✅ **Config mise à jour et service recréé !**\n\n` +
+                        `📝 **Nouvelle ACEVO_ARGS** : \`${envData.env.ACEVO_ARGS.slice(0, 100)}${envData.env.ACEVO_ARGS.length > 100 ? '…' : ''}\`\n\n` +
+                        `\`\`\`\n${shortOutput}\n\`\`\``
                 });
             }
-
-            return await interaction.editReply({
-                content: '❌ Action inconnue.'
-            });
 
         } catch (error) {
             console.error('Erreur aceservers:', error);
-
             const details = [
                 error.message,
-                error.stderr,
-                error.stdout
+                error.stdout,
+                error.stderr
             ].filter(Boolean).join('\n');
-
-            const shortDetails = details.length > 1500 ? `${details.slice(0, 1500)}\n...` : details;
-
-            if (interaction.deferred) {
-                return await interaction.editReply({
-                    content: `❌ Une erreur est survenue.\n\`\`\`\n${shortDetails || 'Erreur inconnue'}\n\`\`\``
-                });
-            }
-
-            return await interaction.reply({
-                content: `❌ Une erreur est survenue.\n\`\`\`\n${shortDetails || 'Erreur inconnue'}\n\`\`\``,
-                ephemeral: true
+            const shortDetails = details.length > 1500 ? `${details.slice(0, 1500)}…` : details;
+            return await interaction.editReply({
+                content: `❌ Erreur : \`\`\`\n${shortDetails}\n\`\`\``
             });
         }
     }
