@@ -9,3 +9,12 @@ services:
       - TEMP_VOICE_CHANNEL_ID=${TEMP_VOICE_CHANNEL_ID}
       - POKEMON_ROLE_ID=${POKEMON_ROLE_ID}
       - CHIENG_ROLE_ID=${CHIENG_ROLE_ID}
+      - AC_CONTAINER_NAME=acevo-dedicated
+      - AC_COMPOSE_DIR=/home/shiba/Documents/ace
+      - AC_COMPOSE_FILE=/home/shiba/Documents/ace/docker-compose.yml
+      - AC_ENV_FILE=/home/shiba/Documents/ace/.env
+      - AC_SERVICE_NAME=acevo-dedicated
+      - AC_ADMIN_ROLE_ID=522799905073266698
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /home/shiba/Documents/ace:/home/shiba/Documents/ace

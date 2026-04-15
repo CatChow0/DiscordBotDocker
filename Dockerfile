@@ -2,12 +2,15 @@ FROM node:20-alpine
 
 WORKDIR /app
 
+RUN apk add --no-cache docker-cli docker-cli-compose
+
 RUN addgroup -g 1001 -S nodejs && \
     adduser -S nodejs -u 1001
 
-COPY --chown=nodejs:nodejs . .
+COPY package*.json ./
+RUN npm ci --omit=dev
 
-RUN npm ci --only=production
+COPY --chown=nodejs:nodejs . .
 
 USER nodejs
 
