@@ -3,6 +3,8 @@ services:
     build: .
     container_name: discord-bot
     restart: unless-stopped
+    group_add:
+      - "127"
     environment:
       - NODE_ENV=production
       - DISCORD_TOKEN=${DISCORD_TOKEN}
