@@ -29,9 +29,11 @@ function readEnvFile(filePath) {
     if (!fs.existsSync(filePath)) {
         throw new Error(`Fichier .env introuvable: ${filePath}`);
     }
+
     const content = fs.readFileSync(filePath, 'utf8');
     const lines = content.split(/\r?\n/);
     const env = {};
+
     for (const line of lines) {
         if (!line || line.trim().startsWith('#')) continue;
         const index = line.indexOf('=');
@@ -40,6 +42,7 @@ function readEnvFile(filePath) {
         const value = line.slice(index + 1);
         env[key] = value;
     }
+
     return { env, lines };
 }
 
@@ -53,10 +56,13 @@ function parseAcevoArgs(argsString) {
         serverconfig: null,
         seasondefinition: null
     };
+
     const serverMatch = argsString.match(/-serverconfig\s+([^\s]+)/);
     const seasonMatch = argsString.match(/-seasondefinition\s+([^\s]+)/);
+
     if (serverMatch) result.serverconfig = serverMatch[1];
     if (seasonMatch) result.seasondefinition = seasonMatch[1];
+
     return result;
 }
 
@@ -121,7 +127,6 @@ module.exports = {
                 const state = info.State;
                 const envData = readEnvFile(ENV_FILE);
                 const acevoArgs = envData.env.ACEVO_ARGS || '';
-                const parsed = parseAcevoArgs(acevoArgs);
 
                 return await interaction.editReply({
                     content:
@@ -148,17 +153,22 @@ module.exports = {
                     tail: lines,
                     timestamps: true
                 });
+
                 const content = logs.toString('utf8').trim();
+
                 if (!content) {
                     return await interaction.editReply('📭 Aucun log disponible.');
                 }
+
                 if (content.length <= 1800) {
                     return await interaction.editReply(`📋 **${lines} lignes :**\n\`\`\`\n${content}\n\`\`\``);
                 }
+
                 const attachment = new AttachmentBuilder(
                     Buffer.from(content, 'utf8'),
                     { name: `acevo-logs-${Date.now()}.txt` }
                 );
+
                 return await interaction.editReply({
                     content: `📄 Logs en fichier (${lines} lignes).`,
                     files: [attachment]
@@ -167,11 +177,13 @@ module.exports = {
 
             if (action === 'update') {
                 const newArgs = interaction.options.getString('args');
+
                 if (!newArgs) {
                     return await interaction.editReply('❌ Fournissez `args` : `-serverconfig ... -seasondefinition ...`');
                 }
 
                 const parsed = parseAcevoArgs(newArgs);
+
                 if (!parsed.serverconfig || !parsed.seasondefinition) {
                     return await interaction.editReply('❌ `args` doit contenir `-serverconfig` ET `-seasondefinition`.');
                 }
@@ -180,28 +192,32 @@ module.exports = {
                 envData.env.ACEVO_ARGS = buildAcevoArgs(parsed.serverconfig, parsed.seasondefinition);
                 writeEnvFile(ENV_FILE, envData.env);
 
-                const cmd = `docker compose -f "${COMPOSE_FILE}" up -d --no-deps --force-recreate ${SERVICE_NAME}`;
-                const result = await execAsync(cmd, { cwd: COMPOSE_DIR });
+                const cmd = `docker compose -f "${COMPOSE_FILE}" up -d ${SERVICE_NAME}`;
+                const result = await execAsync(cmd, { cwd: COMPOSE_DIR, timeout: 120000 });
 
                 const output = `${result.stdout || ''}\n${result.stderr || ''}`.trim();
                 const shortOutput = output.length > 1200 ? `${output.slice(0, 1200)}…` : output;
 
                 return await interaction.editReply({
                     content:
-                        `✅ **Config mise à jour et service recréé !**\n\n` +
+                        `✅ **Config mise à jour et service relancé via Compose !**\n\n` +
                         `📝 **Nouvelle ACEVO_ARGS** : \`${envData.env.ACEVO_ARGS.slice(0, 100)}${envData.env.ACEVO_ARGS.length > 100 ? '…' : ''}\`\n\n` +
-                        `\`\`\`\n${shortOutput}\n\`\`\``
+                        (shortOutput ? `\`\`\`\n${shortOutput}\n\`\`\`` : '')
                 });
             }
 
+            return await interaction.editReply('❌ Action inconnue.');
         } catch (error) {
             console.error('Erreur aceservers:', error);
+
             const details = [
                 error.message,
                 error.stdout,
                 error.stderr
             ].filter(Boolean).join('\n');
+
             const shortDetails = details.length > 1500 ? `${details.slice(0, 1500)}…` : details;
+
             return await interaction.editReply({
                 content: `❌ Erreur : \`\`\`\n${shortDetails}\n\`\`\``
             });
