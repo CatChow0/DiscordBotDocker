@@ -59,10 +59,9 @@ module.exports = {
             }
 
             // Vérifier si l'utilisateur peut fermer le salon
-            const canClose = interaction.user.id === creatorId || 
+            const canClose = interaction.user.id === creatorId ||
                            interaction.member.permissions.has('ManageChannels') ||
                            interaction.member.roles.cache.has(requiredRoleId);
-                           interaction.member.permissions.has('ManageChannels');
 
             if (!canClose) {
                 return await interaction.editReply({

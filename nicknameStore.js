@@ -1,11 +1,12 @@
 const fs = require('fs');
 const path = require('path');
-const os = require('os');
+
+const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, 'data');
 
 const CANDIDATE_PATHS = [
+    path.join(DATA_DIR, 'nicknames.json'),
     path.join(__dirname, 'nicknames.json'),
-    path.join(process.cwd(), 'nicknames.json'),
-    path.join(os.tmpdir(), 'nicknames.json')
+    path.join(process.cwd(), 'nicknames.json')
 ];
 
 let STORE_PATH = CANDIDATE_PATHS[0];

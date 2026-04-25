@@ -189,15 +189,17 @@ module.exports = {
             let destructionInfo = '';
             if (autodestruction === 'time') {
                 const destructionTime = Date.now() + (duree * 60 * 60 * 1000);
-                
-                // Enregistrer dans le gestionnaire Safe-Place
+
+                // Enregistrer dans le gestionnaire Safe-Place (persisté sur disque)
                 safePlaceManager.addSafePlace(channel.id, interaction.user.id, 'time', type, destructionTime);
-                
+
                 // Pour les salons textuels, utiliser aussi le topic
                 if (type === 'text') {
                     await channel.setTopic(`SAFE_PLACE|${interaction.user.id}|time|${destructionTime}|${type}`);
                 }
-                
+
+                // Schedule deletion; safePlaceManager persistence ensures this survives restarts
+                // via checkExpiredSafePlaces() called periodically
                 setTimeout(async () => {
                     try {
                         const channelToDelete = interaction.guild.channels.cache.get(channel.id);
@@ -208,19 +210,19 @@ module.exports = {
                         safePlaceManager.removeSafePlace(channel.id);
                     } catch (error) {
                         console.error('Erreur lors de la suppression automatique:', error);
-                        safePlaceManager.removeSafePlace(channel.id); // Nettoyer quand même
+                        safePlaceManager.removeSafePlace(channel.id);
                     }
                 }, duree * 60 * 60 * 1000);
 
                 destructionInfo = `⏰ Le salon sera supprimé automatiquement dans ${duree} heure(s).`;
             } else if (autodestruction === 'empty') {
-                // Enregistrer dans le gestionnaire Safe-Place
+                // Enregistrer dans le gestionnaire Safe-Place (persisté sur disque)
                 safePlaceManager.addSafePlace(channel.id, interaction.user.id, 'empty', type);
                 destructionInfo = '🔄 Le salon sera supprimé quand il sera vide (après avoir eu au moins une personne).';
             } else if (autodestruction === 'manual') {
-                // Enregistrer dans le gestionnaire Safe-Place
+                // Enregistrer dans le gestionnaire Safe-Place (persisté sur disque)
                 safePlaceManager.addSafePlace(channel.id, interaction.user.id, 'manual', type);
-                
+
                 // Pour les salons textuels, utiliser aussi le topic
                 if (type === 'text') {
                     await channel.setTopic(`SAFE_PLACE|${interaction.user.id}|manual|0|text`);

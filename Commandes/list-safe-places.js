@@ -10,7 +10,6 @@ module.exports = {
 
     async run(bot, interaction, args) {
         try {
-            // Vérifier si l'utilisateur a le rôle requis
             const requiredRoleId = "522799905073266698";
             if (!interaction.member.roles.cache.has(requiredRoleId)) {
                 return await interaction.reply({
@@ -21,12 +20,40 @@ module.exports = {
 
             await interaction.deferReply({ ephemeral: true });
 
-            // Rechercher tous les salons sécurisés de l'utilisateur
-            const userSafePlaces = interaction.guild.channels.cache.filter(channel => {
-                if (!channel.topic || !channel.topic.startsWith('SAFE_PLACE|')) return false;
-                
-                const [prefix, creatorId] = channel.topic.split('|');
-                return creatorId === interaction.user.id;
+            // Combine results from safePlaceManager (in-memory/persisted) and topic-based discovery
+            const userSafePlaces = new Map();
+
+            // 1. From safePlaceManager (covers voice channels that don't have topics)
+            const managerPlaces = safePlaceManager.getSafePlacesByCreator(interaction.user.id);
+            for (const sp of managerPlaces) {
+                const channel = interaction.guild.channels.cache.get(sp.channelId);
+                if (channel) {
+                    userSafePlaces.set(sp.channelId, {
+                        channel,
+                        mode: sp.mode,
+                        type: sp.type,
+                        destructionTime: sp.destructionTime
+                    });
+                } else {
+                    // Channel no longer exists, clean up
+                    safePlaceManager.removeSafePlace(sp.channelId);
+                }
+            }
+
+            // 2. From channel topics (covers text channels and any that survived restart via topic)
+            interaction.guild.channels.cache.forEach(channel => {
+                if (!channel.topic || !channel.topic.startsWith('SAFE_PLACE|')) return;
+                if (userSafePlaces.has(channel.id)) return; // Already tracked by manager
+
+                const [, creatorId, mode, timeOrEmpty, channelType] = channel.topic.split('|');
+                if (creatorId === interaction.user.id) {
+                    userSafePlaces.set(channel.id, {
+                        channel,
+                        mode,
+                        type: channelType || 'text',
+                        destructionTime: mode === 'time' ? parseInt(timeOrEmpty) : null
+                    });
+                }
             });
 
             if (userSafePlaces.size === 0) {
@@ -35,7 +62,6 @@ module.exports = {
                 });
             }
 
-            // Créer l'embed avec la liste des salons
             const embed = new EmbedBuilder()
                 .setTitle('🔒 Vos Salons Sécurisés')
                 .setColor('#00ff00')
@@ -43,28 +69,25 @@ module.exports = {
                 .setTimestamp();
 
             let description = '';
-            
-            userSafePlaces.forEach(channel => {
-                const [prefix, creatorId, destructionType, timeOrEmpty, channelType] = channel.topic.split('|');
-                
+
+            for (const [, data] of userSafePlaces) {
                 let destructionInfo = '';
-                if (destructionType === 'time') {
-                    const destructionTime = parseInt(timeOrEmpty);
-                    const remainingTime = Math.max(0, destructionTime - Date.now());
+                if (data.mode === 'time' && data.destructionTime) {
+                    const remainingTime = Math.max(0, data.destructionTime - Date.now());
                     const remainingHours = Math.ceil(remainingTime / (60 * 60 * 1000));
                     destructionInfo = `⏰ ${remainingHours}h restantes`;
-                } else if (destructionType === 'empty') {
+                } else if (data.mode === 'empty') {
                     destructionInfo = '🔄 Suppression à la sortie';
-                } else if (destructionType === 'manual') {
+                } else if (data.mode === 'manual') {
                     destructionInfo = '🛠️ Suppression manuelle';
                 }
 
-                const typeIcon = channelType === 'voice' ? '🔊' : '📝';
-                const memberCount = channel.type === 2 ? ` (${channel.members.size} membres)` : '';
-                
-                description += `${typeIcon} ${channel} ${memberCount}\n`;
+                const typeIcon = data.type === 'voice' ? '🔊' : '📝';
+                const memberCount = data.channel.isVoiceBased() ? ` (${data.channel.members.size} membres)` : '';
+
+                description += `${typeIcon} ${data.channel} ${memberCount}\n`;
                 description += `└ ${destructionInfo}\n\n`;
-            });
+            }
 
             embed.setDescription(description);
 
@@ -74,7 +97,7 @@ module.exports = {
 
         } catch (error) {
             console.error('Erreur lors de la liste des salons sécurisés:', error);
-            
+
             if (interaction.deferred) {
                 await interaction.editReply({
                     content: '❌ Une erreur est survenue lors de la récupération de la liste.'

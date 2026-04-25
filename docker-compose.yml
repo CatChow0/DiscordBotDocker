@@ -15,6 +15,11 @@ services:
       - AC_ENV_FILE=/home/shiba/Documents/ace/.env
       - AC_SERVICE_NAME=acevo-dedicated
       - AC_ADMIN_ROLE_ID=522799905073266698
+      - DATA_DIR=/app/data
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - /home/shiba/Documents/ace:/home/shiba/Documents/ace
+      - bot-data:/app/data
+
+volumes:
+  bot-data:
