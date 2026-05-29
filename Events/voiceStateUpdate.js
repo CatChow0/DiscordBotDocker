@@ -1,10 +1,12 @@
 const config = require('../config');
 const pokedex = require('../pokedex.json');
 const communes = require('../france.json');
+const countries = require('../countries.json');
 const channelQueue = require('../channelQueue');
 const safePlaceManager = require('../safePlaceManager');
 const nicknameStore = require('../nicknameStore');
 const tempChannelStore = require('../tempChannelStore');
+const channelCountryStore = require('../channelCountryStore');
 
 // Pre-built Sets for O(1) lookups
 const communeNameSet = new Set(
@@ -63,17 +65,30 @@ function generateNicknamePokemon() {
     return parts.join(' ');
 }
 
+function generateNicknameForCountry(countryData) {
+    return pick(countryData.personalities);
+}
+
 module.exports = async (bot, oldState, newState) => {
     const tempVoiceChannelId = config.tempVoiceChannelId;
     const pokemonRoleId = config.pokemonRoleId;
     const chiengRoleId = config.chiengRoleId;
+    const paysRoleId = config.paysRoleId;
 
     // Did the user actually change channel? (not just mute/deafen)
     const channelChanged = newState.channelId !== oldState.channelId;
 
     // --- Temporary channel creation ---
     if (newState.channelId === tempVoiceChannelId) {
-        const channelName = pick([...communeNameSet]);
+        let channelName;
+        let countryData = null;
+
+        if (newState.member.roles.cache.has(paysRoleId)) {
+            countryData = pick(countries);
+            channelName = countryData.country;
+        } else {
+            channelName = pick([...communeNameSet]);
+        }
 
         const parentCategory = newState.channel.parent;
         const permissionOverwrites = parentCategory.permissionOverwrites.cache.map(overwrite => ({
@@ -92,6 +107,12 @@ module.exports = async (bot, oldState, newState) => {
             });
             // Track the created channel
             tempChannelStore.add(result.channelId);
+            if (countryData) {
+                channelCountryStore.set(result.channelId, {
+                    country: countryData.country,
+                    personalities: countryData.personalities
+                });
+            }
             console.log(`Salon temporaire créé: ${result.channelName}`);
         } catch (error) {
             console.error('Erreur lors de la création du salon:', error);
@@ -107,18 +128,24 @@ module.exports = async (bot, oldState, newState) => {
                 }))
             });
             tempChannelStore.add(tempChannel.id);
+            if (countryData) {
+                channelCountryStore.set(tempChannel.id, {
+                    country: countryData.country,
+                    personalities: countryData.personalities
+                });
+            }
             await newState.setChannel(tempChannel);
         }
 
         // Apply nickname on channel join
-        await applyNicknameOnJoin(newState, chiengRoleId, pokemonRoleId);
+        await applyNicknameOnJoin(newState, chiengRoleId, pokemonRoleId, paysRoleId);
     }
 
     // --- Only process nickname and channel tracking on actual channel changes ---
     if (channelChanged) {
         // Apply nickname when moving into an existing temp channel
         if (newState.channel && tempChannelStore.has(newState.channel.id)) {
-            await applyNicknameOnJoin(newState, chiengRoleId, pokemonRoleId);
+            await applyNicknameOnJoin(newState, chiengRoleId, pokemonRoleId, paysRoleId);
         }
 
         // Restore original nickname when leaving a temp channel
@@ -148,6 +175,7 @@ module.exports = async (bot, oldState, newState) => {
     // --- Empty temp channel deletion ---
     if (oldState.channel && tempChannelStore.has(oldState.channel.id) && oldState.channel.members.size === 0) {
         tempChannelStore.remove(oldState.channel.id);
+        channelCountryStore.remove(oldState.channel.id);
         try {
             await channelQueue.enqueue('delete', {
                 guild: oldState.guild,
@@ -182,7 +210,27 @@ module.exports = async (bot, oldState, newState) => {
     }
 };
 
-async function applyNicknameOnJoin(state, chiengRoleId, pokemonRoleId) {
+async function applyNicknameOnJoin(state, chiengRoleId, pokemonRoleId, paysRoleId) {
+    const channelId = state.channelId;
+
+    // Priorité au système pays si le salon est un salon pays
+    const countryData = channelCountryStore.get(channelId);
+    if (countryData) {
+        try {
+            nicknameStore.setOriginal(state.guild.id, state.member.id, state.member.nickname ?? null);
+        } catch (err) {
+            console.error('Erreur sauvegarde pseudo original (pays):', err);
+        }
+        const newNickname = generateNicknameForCountry(countryData);
+        try {
+            await state.member.setNickname(newNickname);
+            console.log(`Pseudo pays changé: ${newNickname}`);
+        } catch (error) {
+            console.error('Erreur changement pseudo pays:', error);
+        }
+        return;
+    }
+
     const promises = [];
 
     if (state.member.roles.cache.has(chiengRoleId)) {

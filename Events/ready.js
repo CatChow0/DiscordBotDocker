@@ -1,6 +1,7 @@
 const loadSlashCommands = require("../Loader/loadSlashCommands");
 const safePlaceManager = require("../safePlaceManager");
 const tempChannelStore = require("../tempChannelStore");
+const channelCountryStore = require("../channelCountryStore");
 
 module.exports = async bot => {
     await loadSlashCommands(bot);
@@ -11,6 +12,9 @@ module.exports = async bot => {
 
         // Clean up empty temp channels left from before restart
         await tempChannelStore.cleanupEmpty(guild);
+
+        // Clean up orphaned country channel entries
+        channelCountryStore.cleanupMissing(guild);
 
         // Check for expired time-based Safe-Places
         await safePlaceManager.checkExpiredSafePlaces(guild);

@@ -1,0 +1,359 @@
+[
+  {
+    "country": "France",
+    "personalities": [
+      "Emmanuel Macron",
+      "Charles de Gaulle",
+      "Philippe Etchebest",
+      "Gims",
+      "Marie Curie",
+      "Voltaire",
+      "Jeanne d'Arc",
+      "Napoléon Bonaparte",
+      "Louis XIV",
+      "Victor Hugo",
+      "Coco Chanel",
+      "Zinedine Zidane",
+      "Édith Piaf",
+      "Astérix",
+      "Obélix",
+      "Molière",
+      "Serge Gainsbourg"
+    ]
+  },
+  {
+    "country": "Italie",
+    "personalities": [
+      "Jules César",
+      "Léonard de Vinci",
+      "Galilée",
+      "Dante Alighieri",
+      "Marco Polo",
+      "Giacomo Casanova",
+      "Benito Mussolini",
+      "Luciano Pavarotti",
+      "Roberto Benigni",
+      "Monica Bellucci",
+      "Giorgio Armani",
+      "Mario",
+      "Luigi",
+      "Michel-Ange",
+      "Sophia Loren"
+    ]
+  },
+  {
+    "country": "Allemagne",
+    "personalities": [
+      "Albert Einstein",
+      "Karl Marx",
+      "Ludwig van Beethoven",
+      "Angela Merkel",
+      "Otto von Bismarck",
+      "Martin Luther",
+      "Friedrich Nietzsche",
+      "Johann Gutenberg",
+      "Heidi Klum",
+      "Michael Schumacher",
+      "Bach",
+      "Mozart",
+      "Karl Lagerfeld",
+      "Bismarck"
+    ]
+  },
+  {
+    "country": "Royaume-Uni",
+    "personalities": [
+      "Winston Churchill",
+      "William Shakespeare",
+      "Isaac Newton",
+      "Elizabeth II",
+      "Elton John",
+      "David Beckham",
+      "J.K. Rowling",
+      "Charles Darwin",
+      "Harry Potter",
+      "Sherlock Holmes",
+      "Freddie Mercury",
+      "Margaret Thatcher",
+      "Lewis Hamilton",
+      "Mr Bean"
+    ]
+  },
+  {
+    "country": "États-Unis",
+    "personalities": [
+      "Abraham Lincoln",
+      "Elvis Presley",
+      "Marilyn Monroe",
+      "Michael Jordan",
+      "Steve Jobs",
+      "Martin Luther King",
+      "Donald Trump",
+      "Beyoncé",
+      "Mark Zuckerberg",
+      "Tom Cruise",
+      "Michael Jackson",
+      "Einstein",
+      "Walt Disney",
+      "Muhammad Ali",
+      "Dwayne Johnson"
+    ]
+  },
+  {
+    "country": "Russie",
+    "personalities": [
+      "Vladimir Poutine",
+      "Lénine",
+      "Staline",
+      "Pierre le Grand",
+      "Dostoïevski",
+      "Tolstoï",
+      "Tchaïkovski",
+      "Garfield",
+      "Gagarine",
+      "Rasputin",
+      "Catherine II",
+      "Mikhail Kalachnikov",
+      "Ivan le Terrible"
+    ]
+  },
+  {
+    "country": "Japon",
+    "personalities": [
+      "Miyamoto Musashi",
+      "Akira Kurosawa",
+      "Hayao Miyazaki",
+      "Hideo Kojima",
+      "Naruto",
+      "Son Goku",
+      "Pikachu",
+      "Marie Kondo",
+      "Haruki Murakami",
+      "Hiroshige",
+      "Yoko Ono",
+      "Shinzo Abe",
+      "Sakura"
+    ]
+  },
+  {
+    "country": "Brésil",
+    "personalities": [
+      "Pelé",
+      "Ayrton Senna",
+      "Ronaldinho",
+      "Neymar",
+      "Paulo Coelho",
+      "Gisele Bündchen",
+      "Jair Bolsonaro",
+      "Carmen Miranda",
+      "Senna",
+      "Zico",
+      "Rivaldo",
+      "Romário",
+      "Machado de Assis"
+    ]
+  },
+  {
+    "country": "Australie",
+    "personalities": [
+      "Steve Irwin",
+      "Hugh Jackman",
+      "Crocodile Dundee",
+      "Nicole Kidman",
+      "Heath Ledger",
+      "Chris Hemsworth",
+      "Margot Robbie",
+      "Kylie Minogue",
+      "Cate Blanchett",
+      "Russell Crowe"
+    ]
+  },
+  {
+    "country": "Canada",
+    "personalities": [
+      "Justin Trudeau",
+      "Céline Dion",
+      "Drake",
+      "Wayne Gretzky",
+      "Ryan Reynolds",
+      "Seth Rogen",
+      "Jim Carrey",
+      "Avril Lavigne",
+      "Shania Twain",
+      "Keanu Reeves",
+      "Terry Fox",
+      "Lance Stroll"
+    ]
+  },
+  {
+    "country": "Espagne",
+    "personalities": [
+      "Pablo Picasso",
+      "Salvador Dalí",
+      "Miguel de Cervantes",
+      "Antonio Banderas",
+      "Rafael Nadal",
+      "Penélope Cruz",
+      "Pedro Almodóvar",
+      "Gaudi",
+      "El Cid",
+      "Fernando Alonso",
+      "Paco de Lucía",
+      "Rosalía"
+    ]
+  },
+  {
+    "country": "Inde",
+    "personalities": [
+      "Mahatma Gandhi",
+      "Narendra Modi",
+      "Sachin Tendulkar",
+      "Shah Rukh Khan",
+      "Amitabh Bachchan",
+      "Rabindranath Tagore",
+      "Indira Gandhi",
+      "Aishwarya Rai",
+      "Sundar Pichai",
+      "Salman Khan",
+      "Buddha",
+      "Bollywood"
+    ]
+  },
+  {
+    "country": "Chine",
+    "personalities": [
+      "Mao Zedong",
+      "Confucius",
+      "Jackie Chan",
+      "Bruce Lee",
+      "Sun Tzu",
+      "Xi Jinping",
+      "Yao Ming",
+      "Jack Ma",
+      "Jet Li",
+      "Mulan",
+      "Gengis Khan",
+      "Kublai Khan",
+      "Laozi"
+    ]
+  },
+  {
+    "country": "Égypte",
+    "personalities": [
+      "Cléopâtre",
+      "Toutânkhamon",
+      "Néfertiti",
+      "Ramsès II",
+      "Akhenaton",
+      "Moammer Kadhafi",
+      "Omar Sharif",
+      "Mohamed Salah",
+      "Imhotep",
+      "Sphinx",
+      "Pharaon"
+    ]
+  },
+  {
+    "country": "Grèce",
+    "personalities": [
+      "Zeus",
+      "Hercule",
+      "Aristote",
+      "Platon",
+      "Socrate",
+      "Alexandre le Grand",
+      "Hippocrate",
+      "Archimède",
+      "Homère",
+      "Zorba",
+      "Épictète",
+      "Périclès",
+      "Poséidon"
+    ]
+  },
+  {
+    "country": "Norvège",
+    "personalities": [
+      "Thor",
+      "Odin",
+      "Loki",
+      "Edvard Munch",
+      "Henrik Ibsen",
+      "Roald Amundsen",
+      "Viking",
+      "Fridtjof Nansen",
+      "Sigrid Undset",
+      "Kygo",
+      "A-ha",
+      "Erlend Øye"
+    ]
+  },
+  {
+    "country": "Mexique",
+    "personalities": [
+      "Frida Kahlo",
+      "Diego Rivera",
+      "Pancho Villa",
+      "Emiliano Zapata",
+      "César Chávez",
+      "Salma Hayek",
+      "Guillermo del Toro",
+      "Cantinflas",
+      "Moctezuma",
+      "Speedy Gonzales",
+      "El Chapo",
+      "Mama Coco"
+    ]
+  },
+  {
+    "country": "Corée du Sud",
+    "personalities": [
+      "PSY",
+      "Kim Jong-un",
+      "Ban Ki-moon",
+      "BTS",
+      "Blackpink",
+      "Park Chan-wook",
+      "Son Heung-min",
+      "Samsung",
+      "Lee Kun-hee",
+      "Gangnam Style",
+      "Squid Game",
+      "Hyundai"
+    ]
+  },
+  {
+    "country": "Suisse",
+    "personalities": [
+      "Roger Federer",
+      "Albert Einstein",
+      "Jean-Jacques Rousseau",
+      "Federer",
+      "Sepp Blatter",
+      "Ursula Andress",
+      "Le Corbusier",
+      "Henri Dunant",
+      "Tina Turner",
+      "Heidi",
+      "William Tell",
+      "Néstor",
+      "Patek Philippe"
+    ]
+  },
+  {
+    "country": "Portugal",
+    "personalities": [
+      "Cristiano Ronaldo",
+      "Vasco de Gama",
+      "Fernando Pessoa",
+      "Cristiano",
+      "José Mourinho",
+      "António Salazar",
+      "Luís de Camões",
+      "Amália Rodrigues",
+      "Nelly Furtado",
+      "Fado",
+      "Porto"
+    ]
+  }
+]
