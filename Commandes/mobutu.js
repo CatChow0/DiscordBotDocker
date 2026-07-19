@@ -2,7 +2,7 @@ const Discord = require('discord.js');
 const config = require('../config');
 
 const KICK_REASON = 'Retrait visiteur temporaire - commande /mobutu';
-const ENTRIES_PER_EMBED = 80;
+const DESC_BUDGET = 4000; // margin under the 4096-char setDescription cap
 const MAX_CHUNKS = 9; // header + MAX_CHUNKS = 10 = Discord per-message embed cap
 const COLLECTOR_TIMEOUT_MS = 60_000;
 
@@ -92,14 +92,23 @@ module.exports = {
             });
 
             const chunks = [];
-            let truncated = 0;
-            for (let i = 0; i < entries.length; i += ENTRIES_PER_EMBED) {
-                if (chunks.length >= MAX_CHUNKS) {
-                    truncated = entries.length - i;
-                    break;
+            let idx = 0;
+            while (idx < entries.length && chunks.length < MAX_CHUNKS) {
+                const chunk = [];
+                let len = 0;
+                while (idx < entries.length && len + entries[idx].length + 1 <= DESC_BUDGET) {
+                    chunk.push(entries[idx]);
+                    len += entries[idx].length + 1;
+                    idx++;
                 }
-                chunks.push(entries.slice(i, i + ENTRIES_PER_EMBED));
+                // forward-progress guard: if a single line exceeds the budget, push it alone
+                if (chunk.length === 0 && idx < entries.length) {
+                    chunk.push(entries[idx]);
+                    idx++;
+                }
+                chunks.push(chunk);
             }
+            const truncated = entries.length - idx;
 
             const chunkEmbeds = chunks.map((chunk, i) => {
                 const e = new Discord.EmbedBuilder()
@@ -179,6 +188,7 @@ module.exports = {
             if (failed.length > 0) {
                 let detail = failed.map(f => `@${f.member.user.tag} — ${f.reason}`).slice(0, 15).join('\n');
                 if (failed.length > 15) detail += `\n… et ${failed.length - 15} autre(s).`;
+                if (detail.length > 1000) detail = detail.slice(0, 997) + '...';
                 summary.addFields({ name: 'Détail des échecs', value: detail });
             }
             if (ignored.length > 0) {
