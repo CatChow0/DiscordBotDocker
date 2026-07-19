@@ -56,8 +56,13 @@ Si ni l'option ni la config ne définissent un rôle → reply éphémère d'err
    - chaque embed titré `Cibles — partie X/Y` ;
    - une **ActionRow** unique avec deux boutons `✅ Confirmer` / `❌ Annuler`
      attachés au même message (en bas de la liste).
-   Capacité : ~120 users/embed × 10 embeds ≈ 1200 users. Au-delà, tronquer la
-   dernière partie avec un avertissement « +N non affichés, affinez `depuis` ».
+   Capacité : chunking par **budget de caractères** (~4000 chars/embed, sous
+   la limite 4096 de `setDescription`) × max 9 chunks (header + 9 = 10 = limite
+   Discord d'embeds par message). Capacité adaptive selon la longueur des pseudos.
+   Au-delà de 9 chunks, tronquer la dernière partie avec un avertissement
+   « +N non affichés, affinez `depuis` ». (Note : une version initiale fixait
+   `ENTRIES_PER_EMBED=80`, abandonnée car des pseudos longs pouvaient dépasser
+   la limite 4096.)
 5. **Collecteur de boutons** (~60s) :
    - `❌ Annuler` ou timeout → edit du reply : « Kick annulé. »
    - `✅ Confirmer` → étape suivante.
