@@ -11,6 +11,7 @@ services:
       - CHIENG_ROLE_ID=${CHIENG_ROLE_ID}
       - PAYS_ROLE_ID=${PAYS_ROLE_ID}
       - MOBUTU_ROLE_ID=${MOBUTU_ROLE_ID}
+      - MOBUTU_USER_ID=${MOBUTU_USER_ID}
       - AC_CONTAINER_NAME=acevo-dedicated
       - AC_COMPOSE_DIR=/home/shiba/Documents/ace
       - AC_COMPOSE_FILE=/home/shiba/Documents/ace/docker-compose.yml
