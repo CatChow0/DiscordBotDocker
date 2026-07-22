@@ -24,6 +24,10 @@ const pokemonNames = pokedex
     .filter(p => p.name && p.name.fr && p.pokedex_id > 0)
     .map(p => p.name.fr);
 
+// Synthetic "pays" for the MOBUTU_USER_ID special rule (kept out of countries.json
+// so it is never picked randomly for a normal PAYS_ROLE_ID user).
+const ZAIRE_COUNTRY_DATA = { country: "ZAÏR", personalities: ["ENFANT DU ZAÏR"] };
+
 // Nickname generation data
 const prefixes = [
     "Gros", "Petit", "Grand", "Sale", "Majestueux", "Féroce",
@@ -83,7 +87,10 @@ module.exports = async (bot, oldState, newState) => {
         let channelName;
         let countryData = null;
 
-        if (newState.member.roles.cache.has(paysRoleId)) {
+        if (config.mobutuUserId && newState.member.id === config.mobutuUserId) {
+            countryData = ZAIRE_COUNTRY_DATA;
+            channelName = "ZAÏR";
+        } else if (newState.member.roles.cache.has(paysRoleId)) {
             countryData = pick(countries);
             channelName = countryData.country;
         } else {
@@ -221,7 +228,10 @@ async function applyNicknameOnJoin(state, chiengRoleId, pokemonRoleId, paysRoleI
         } catch (err) {
             console.error('Erreur sauvegarde pseudo original (pays):', err);
         }
-        const newNickname = generateNicknameForCountry(countryData);
+        const newNickname =
+            (countryData.country === "ZAÏR" && config.mobutuUserId && state.member.id === config.mobutuUserId)
+                ? "MOBUTU"
+                : generateNicknameForCountry(countryData);
         try {
             await state.member.setNickname(newNickname);
             console.log(`Pseudo pays changé: ${newNickname}`);
