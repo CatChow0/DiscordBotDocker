@@ -33,30 +33,27 @@ module.exports = async bot => {
         console.error('Erreur enregistrement des slash commandes:', err);
     }
 
+    // Recover Safe-Place state from guild channels after restart
     for (const [, guild] of bot.guilds.cache) {
-        // Recover Safe-Place state from guild channels after restart
         safePlaceManager.recoverFromGuild(guild);
+    }
 
-        // Clean up empty temp channels left from before restart
-        await tempChannelStore.cleanupEmpty(guild);
+    // The stores below hold channels of every guild: clean them once, across the whole client
+    // (a per-guild pass would drop channels belonging to the other guilds)
+    await tempChannelStore.cleanupEmpty(bot);
+    channelCountryStore.cleanupMissing(bot);
+    await safePlaceManager.checkExpiredSafePlaces(bot);
 
-        // Clean up orphaned country channel entries
-        channelCountryStore.cleanupMissing(guild);
-
-        // Must run after cleanupEmpty, so deleted temp channels are no longer tracked
+    // Must run after cleanupEmpty, so deleted temp channels are no longer tracked
+    for (const [, guild] of bot.guilds.cache) {
         await restoreNicknames(guild);
-
-        // Check for expired time-based Safe-Places
-        await safePlaceManager.checkExpiredSafePlaces(guild);
     }
 
     // Periodically check for expired time-based Safe-Places (every 5 minutes)
     setInterval(() => {
-        for (const [, guild] of bot.guilds.cache) {
-            safePlaceManager.checkExpiredSafePlaces(guild).catch(err => {
-                console.error('Erreur lors de la vérification des Safe-Places expirés:', err);
-            });
-        }
+        safePlaceManager.checkExpiredSafePlaces(bot).catch(err => {
+            console.error('Erreur lors de la vérification des Safe-Places expirés:', err);
+        });
     }, 5 * 60 * 1000);
 
     console.log(`${bot.user.tag} est bien en ligne !`);

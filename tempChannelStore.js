@@ -52,11 +52,12 @@ class TempChannelStore {
         return existed;
     }
 
-    // On startup, clean up empty temp channels and return count of deleted
-    async cleanupEmpty(guild) {
+    // On startup, clean up empty temp channels and return count of deleted.
+    // Takes the client: the store holds channels of every guild the bot is in.
+    async cleanupEmpty(client) {
         let deleted = 0;
         for (const channelId of [...this.channels]) {
-            const channel = guild.channels.cache.get(channelId);
+            const channel = client.channels.cache.get(channelId);
             if (!channel) {
                 // Channel no longer exists
                 this.channels.delete(channelId);

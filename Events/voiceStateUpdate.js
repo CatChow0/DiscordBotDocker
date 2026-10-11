@@ -180,18 +180,20 @@ module.exports = async (bot, oldState, newState) => {
 
     // --- Empty temp channel deletion ---
     if (oldState.channel && tempChannelStore.has(oldState.channel.id) && oldState.channel.members.size === 0) {
-        tempChannelStore.remove(oldState.channel.id);
-        channelCountryStore.remove(oldState.channel.id);
+        // Keep a reference: oldState.channel resolves through the cache and becomes null once deleted
+        const channel = oldState.channel;
+        tempChannelStore.remove(channel.id);
+        channelCountryStore.remove(channel.id);
         try {
             await channelQueue.enqueue('delete', {
                 guild: oldState.guild,
-                channelId: oldState.channel.id
+                channelId: channel.id
             });
-            console.log(`Salon temporaire supprimé: ${oldState.channel.name}`);
+            console.log(`Salon temporaire supprimé: ${channel.name}`);
         } catch (error) {
             console.error('Erreur lors de la suppression du salon:', error);
             try {
-                await oldState.channel.delete();
+                await channel.delete();
             } catch (fallbackError) {
                 console.error('Erreur fallback suppression:', fallbackError);
             }

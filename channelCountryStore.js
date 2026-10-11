@@ -59,10 +59,11 @@ class ChannelCountryStore {
         return existed;
     }
 
-    cleanupMissing(guild) {
+    // Takes the client: the store holds channels of every guild the bot is in
+    cleanupMissing(client) {
         let removed = 0;
         for (const channelId of this.channels.keys()) {
-            const channel = guild.channels.cache.get(channelId);
+            const channel = client.channels.cache.get(channelId);
             if (!channel) {
                 this.channels.delete(channelId);
                 removed++;

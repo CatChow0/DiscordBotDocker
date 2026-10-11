@@ -98,8 +98,9 @@ class SafePlaceManager {
         return result;
     }
 
-    // Check and clean up expired time-based Safe-Places
-    async checkExpiredSafePlaces(guild) {
+    // Check and clean up expired time-based Safe-Places.
+    // Takes the client: the store holds channels of every guild the bot is in.
+    async checkExpiredSafePlaces(client) {
         const now = Date.now();
         const toDelete = [];
 
@@ -111,7 +112,7 @@ class SafePlaceManager {
 
         for (const channelId of toDelete) {
             try {
-                const channel = guild.channels.cache.get(channelId);
+                const channel = client.channels.cache.get(channelId);
                 if (channel) {
                     await channel.delete();
                     console.log(`Safe-Place expiré supprimé: ${channelId}`);
