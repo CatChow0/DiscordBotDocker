@@ -1,27 +1,42 @@
-const { Events } = require('discord.js');
+const config = require('../config');
 
-const ROLE_ID = '1319437162005004320';
-const MESSAGE_ID = '1319448263006359664'; // Remplacez par l'ID de votre message
 const TOGGLE_EMOJI = '✅'; // Emoji utilisé pour basculer le rôle
 
-module.exports = async (bot, reaction, user) => {
-    if (reaction.message.id === MESSAGE_ID && reaction.emoji.name === TOGGLE_EMOJI) {
-        const guild = reaction.message.guild;
-        const member = guild.members.cache.get(user.id);
-        const role = guild.roles.cache.get(ROLE_ID);
+async function resolve(reaction, user) {
+    // Les réactions sur des messages anciens arrivent en "partial"
+    if (reaction.partial) await reaction.fetch();
+    if (user.bot) return null;
+    if (reaction.message.id !== config.reactionMessageId || reaction.emoji.name !== TOGGLE_EMOJI) return null;
 
-        if (member && role) {
-            if (reaction.message.reactions.cache.get(TOGGLE_EMOJI).users.cache.has(user.id)) {
-                if (!member.roles.cache.has(ROLE_ID)) {
-                    await member.roles.add(role);
-                    console.log(`Role ${ROLE_ID} added to user ${user.id}`);
-                }
-            } else {
-                if (member.roles.cache.has(ROLE_ID)) {
-                    await member.roles.remove(role);
-                    console.log(`Role ${ROLE_ID} removed from user ${user.id}`);
-                }
-            }
+    const guild = reaction.message.guild;
+    if (!guild) return null;
+    const member = await guild.members.fetch(user.id).catch(() => null);
+    const role = guild.roles.cache.get(config.reactionRoleId);
+    return member && role ? { member, role } : null;
+}
+
+async function onAdd(bot, reaction, user) {
+    try {
+        const target = await resolve(reaction, user);
+        if (target && !target.member.roles.cache.has(target.role.id)) {
+            await target.member.roles.add(target.role);
+            console.log(`Role ${target.role.id} added to user ${user.id}`);
         }
+    } catch (err) {
+        console.error('Erreur rôle par réaction (ajout):', err);
     }
-};
+}
+
+async function onRemove(bot, reaction, user) {
+    try {
+        const target = await resolve(reaction, user);
+        if (target && target.member.roles.cache.has(target.role.id)) {
+            await target.member.roles.remove(target.role);
+            console.log(`Role ${target.role.id} removed from user ${user.id}`);
+        }
+    } catch (err) {
+        console.error('Erreur rôle par réaction (retrait):', err);
+    }
+}
+
+module.exports = { events: { messageReactionAdd: onAdd, messageReactionRemove: onRemove } };
