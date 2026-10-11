@@ -36,13 +36,16 @@ class ChannelQueue {
     async _execute(action, args) {
         switch (action) {
             case 'create': {
-                const { guild, channelName, parentCategoryId, permissionOverwrites, memberId } = args;
+                const { guild, channelName, parentCategoryId, permissionOverwrites, memberId, onCreated } = args;
                 const channel = await guild.channels.create({
                     name: channelName,
                     type: 2, // GuildVoice
                     parent: parentCategoryId,
                     permissionOverwrites
                 });
+                // Appelé avant le déplacement, pour que l'événement voiceStateUpdate
+                // du déplacement trouve déjà le salon enregistré
+                if (onCreated) onCreated(channel);
                 const member = await guild.members.fetch(memberId);
                 if (member.voice.channel) {
                     await member.voice.setChannel(channel);

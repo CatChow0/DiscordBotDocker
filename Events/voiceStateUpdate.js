@@ -8,8 +8,8 @@ const nicknameStore = require('../nicknameStore');
 const tempChannelStore = require('../tempChannelStore');
 const channelCountryStore = require('../channelCountryStore');
 
-// Pre-built Sets for O(1) lookups
-const communeNameSet = new Set(
+// Built once: unique commune names, as an array for random picks
+const communeNames = [...new Set(
     communes.map(commune => {
         const formattedName = commune.Nom_commune
             .toLowerCase()
@@ -18,7 +18,7 @@ const communeNameSet = new Set(
             .join(' ');
         return `${formattedName} - ${commune.Code_postal}`;
     })
-);
+)];
 
 const pokemonNames = pokedex
     .filter(p => p.name && p.name.fr && p.pokedex_id > 0)
@@ -94,7 +94,7 @@ module.exports = async (bot, oldState, newState) => {
             countryData = pick(countries);
             channelName = countryData.country;
         } else {
-            channelName = pick([...communeNameSet]);
+            channelName = pick(communeNames);
         }
 
         const parentCategory = newState.channel.parent;
@@ -104,48 +104,47 @@ module.exports = async (bot, oldState, newState) => {
             deny: overwrite.deny.toArray()
         }));
 
+        // Track the channel as soon as it exists, before the member is moved into it
+        let createdChannel = null;
+        const trackChannel = channel => {
+            createdChannel = channel;
+            tempChannelStore.add(channel.id);
+            if (countryData) {
+                channelCountryStore.set(channel.id, {
+                    country: countryData.country,
+                    personalities: countryData.personalities
+                });
+            }
+        };
+
         try {
             const result = await channelQueue.enqueue('create', {
                 guild: newState.guild,
                 channelName,
                 parentCategoryId: parentCategory.id,
                 permissionOverwrites,
-                memberId: newState.member.id
+                memberId: newState.member.id,
+                onCreated: trackChannel
             });
-            // Track the created channel
-            tempChannelStore.add(result.channelId);
-            if (countryData) {
-                channelCountryStore.set(result.channelId, {
-                    country: countryData.country,
-                    personalities: countryData.personalities
-                });
-            }
             console.log(`Salon temporaire créé: ${result.channelName}`);
         } catch (error) {
             console.error('Erreur lors de la création du salon:', error);
-
-            const tempChannel = await newState.guild.channels.create({
-                name: channelName,
-                type: 2,
-                parent: parentCategory,
-                permissionOverwrites: permissionOverwrites.map(overwrite => ({
-                    id: overwrite.id,
-                    allow: overwrite.allow,
-                    deny: overwrite.deny
-                }))
-            });
-            tempChannelStore.add(tempChannel.id);
-            if (countryData) {
-                channelCountryStore.set(tempChannel.id, {
-                    country: countryData.country,
-                    personalities: countryData.personalities
-                });
+            try {
+                // Only create a fallback channel if the first one was never created
+                if (!createdChannel) {
+                    trackChannel(await newState.guild.channels.create({
+                        name: channelName,
+                        type: 2,
+                        parent: parentCategory,
+                        permissionOverwrites
+                    }));
+                }
+                await newState.setChannel(createdChannel);
+            } catch (fallbackError) {
+                console.error('Erreur fallback création/déplacement:', fallbackError);
             }
-            await newState.setChannel(tempChannel);
         }
-
-        // Apply nickname on channel join
-        await applyNicknameOnJoin(newState, chiengRoleId, pokemonRoleId, paysRoleId);
+        // The nickname is applied by the voiceStateUpdate fired when the member is moved
     }
 
     // --- Only process nickname and channel tracking on actual channel changes ---
@@ -241,37 +240,27 @@ async function applyNicknameOnJoin(state, chiengRoleId, pokemonRoleId, paysRoleI
         return;
     }
 
-    const promises = [];
-
+    // One nickname per join: chieng takes priority over Pokemon if the member has both roles
+    let kind = null;
+    let newNickname = null;
     if (state.member.roles.cache.has(chiengRoleId)) {
-        try {
-            nicknameStore.setOriginal(state.guild.id, state.member.id, state.member.nickname ?? null);
-        } catch (err) {
-            console.error('Erreur sauvegarde pseudo original:', err);
-        }
-        const newNickname = generateNicknameChieng();
-        promises.push(
-            state.member.setNickname(newNickname)
-                .then(() => console.log(`Pseudo chieng changé: ${newNickname}`))
-                .catch(error => console.error('Erreur changement pseudo chieng:', error))
-        );
+        kind = 'chieng';
+        newNickname = generateNicknameChieng();
+    } else if (state.member.roles.cache.has(pokemonRoleId)) {
+        kind = 'Pokemon';
+        newNickname = generateNicknamePokemon();
     }
+    if (!newNickname) return;
 
-    if (state.member.roles.cache.has(pokemonRoleId)) {
-        try {
-            nicknameStore.setOriginal(state.guild.id, state.member.id, state.member.nickname ?? null);
-        } catch (err) {
-            console.error('Erreur sauvegarde pseudo original:', err);
-        }
-        const newNickname = generateNicknamePokemon();
-        promises.push(
-            state.member.setNickname(newNickname)
-                .then(() => console.log(`Pseudo Pokemon changé: ${newNickname}`))
-                .catch(error => console.error('Erreur changement pseudo Pokemon:', error))
-        );
+    try {
+        nicknameStore.setOriginal(state.guild.id, state.member.id, state.member.nickname ?? null);
+    } catch (err) {
+        console.error('Erreur sauvegarde pseudo original:', err);
     }
-
-    if (promises.length > 0) {
-        await Promise.allSettled(promises);
+    try {
+        await state.member.setNickname(newNickname);
+        console.log(`Pseudo ${kind} changé: ${newNickname}`);
+    } catch (error) {
+        console.error(`Erreur changement pseudo ${kind}:`, error);
     }
 }
