@@ -2,9 +2,9 @@
   "name": "botonku",
   "version": "1.0.0",
   "description": "bot discor",
-  "main": "index.js",
+  "main": "main.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node main.js"
   },
   "repository": {
     "type": "git",
@@ -21,7 +21,6 @@
     "discord.js": "^14.27.0",
     "dockerode": "^4.0.10",
     "express": "^5.1.0",
-    "fs": "^0.0.1-security",
     "ms": "^2.1.3"
   }
 }

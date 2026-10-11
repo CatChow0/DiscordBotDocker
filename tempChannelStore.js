@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const { writeJsonAtomic } = require('./jsonFile');
 
 const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, 'data');
 const STORE_PATH = path.join(DATA_DIR, 'tempchannels.json');
@@ -30,7 +31,7 @@ class TempChannelStore {
 
     _persist() {
         try {
-            fs.writeFileSync(STORE_PATH, JSON.stringify([...this.channels]));
+            writeJsonAtomic(STORE_PATH, [...this.channels]);
         } catch (err) {
             console.error('TempChannelStore: erreur sauvegarde:', err);
         }

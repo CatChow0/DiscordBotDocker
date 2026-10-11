@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const { writeJsonAtomic } = require('./jsonFile');
 
 const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, 'data');
 const STORE_PATH = path.join(DATA_DIR, 'safeplaces.json');
@@ -34,7 +35,7 @@ class SafePlaceManager {
     _persist() {
         try {
             const data = Object.fromEntries(this.safePlaces);
-            fs.writeFileSync(STORE_PATH, JSON.stringify(data, null, 2));
+            writeJsonAtomic(STORE_PATH, data, 2);
         } catch (err) {
             console.error('SafePlaceManager: erreur sauvegarde fichier:', err);
         }

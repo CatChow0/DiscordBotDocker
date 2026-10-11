@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const { writeJsonAtomic } = require('./jsonFile');
 
 const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, 'data');
 const STORE_PATH = path.join(DATA_DIR, 'channelCountries.json');
@@ -33,7 +34,7 @@ class ChannelCountryStore {
     _persist() {
         try {
             const obj = Object.fromEntries(this.channels);
-            fs.writeFileSync(STORE_PATH, JSON.stringify(obj, null, 2));
+            writeJsonAtomic(STORE_PATH, obj, 2);
         } catch (err) {
             console.error('ChannelCountryStore: erreur sauvegarde:', err);
         }

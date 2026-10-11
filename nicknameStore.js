@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const { writeJsonAtomic } = require('./jsonFile');
 
 const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, 'data');
 
@@ -43,7 +44,7 @@ if (!persistenceEnabled) {
 function persist() {
     if (!persistenceEnabled) return;
     try {
-        fs.writeFileSync(STORE_PATH, JSON.stringify(store, null, 2));
+        writeJsonAtomic(STORE_PATH, store, 2);
     } catch (err) {
         console.error('nicknameStore: erreur écriture fichier, désactivation de la persistance:', err);
         persistenceEnabled = false;
