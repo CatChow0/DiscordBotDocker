@@ -10,7 +10,7 @@ const COMPOSE_DIR = process.env.AC_COMPOSE_DIR || '/home/shiba/Documents/ace';
 const COMPOSE_FILE = process.env.AC_COMPOSE_FILE || '/home/shiba/Documents/ace/docker-compose.yml';
 const ENV_FILE = process.env.AC_ENV_FILE || '/home/shiba/Documents/ace/.env';
 const SERVICE_NAME = process.env.AC_SERVICE_NAME || 'acevo-dedicated';
-const ADMIN_ROLE_ID = process.env.AC_ADMIN_ROLE_ID || '522799905073266698';
+const ADMIN_ROLE_ID = require('../config').adminRoleId;
 
 function execAsync(command, options = {}) {
     return new Promise((resolve, reject) => {

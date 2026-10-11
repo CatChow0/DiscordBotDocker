@@ -1,25 +1,43 @@
 const Discord = require('discord.js');
-const intents = new Discord.IntentsBitField(3276799);
-const bot = new Discord.Client({ intents });
+const { GatewayIntentBits, Partials } = Discord;
+const bot = new Discord.Client({
+    intents: [
+        GatewayIntentBits.Guilds,
+        GatewayIntentBits.GuildMembers,
+        GatewayIntentBits.GuildVoiceStates,
+        GatewayIntentBits.GuildMessageReactions
+    ],
+    // Nécessaire pour recevoir les réactions sur des messages hors cache (rôle par réaction)
+    partials: [Partials.Message, Partials.Channel, Partials.Reaction]
+});
 const loadCommands = require("./Loader/loadCommands");
 const loadEvents = require("./Loader/loadEvents");
 const config = require('./config');
 const express = require('express');
-const bodyParser = require('body-parser');
+
+process.on('unhandledRejection', err => console.error('Promesse rejetée non gérée:', err));
 
 bot.commands = new Discord.Collection();
 bot.color = "#FF0000";
 
-bot.login(config.token);
 loadCommands(bot);
 loadEvents(bot);
+bot.login(config.token);
 
 // Serveur Express pour Jenkins CI
 const app = express();
-app.use(bodyParser.json());
+app.use(express.json());
 
 app.post('/ci-notify', async (req, res) => {
-    const { userId, status, urls } = req.body;
+    if (!config.ciSecret || req.get('X-CI-Secret') !== config.ciSecret) {
+        return res.status(401).json({ error: 'unauthorized' });
+    }
+
+    const { userId, status, urls = [] } = req.body || {};
+    if (typeof userId !== 'string' || !Array.isArray(urls) || !urls.every(u => typeof u === 'string' && /^https?:\/\//.test(u))) {
+        return res.status(400).json({ error: 'invalid payload' });
+    }
+
     try {
         const user = await bot.users.fetch(userId);
         if (status === 'success') {
@@ -27,7 +45,7 @@ app.post('/ci-notify', async (req, res) => {
                 .setColor('#43B581')
                 .setTitle('✅ Build Jenkins terminé avec succès !')
                 .setDescription('Les artefacts sont disponibles en téléchargement :')
-                .addFields(...urls.map(url => {
+                .addFields(...urls.slice(0, 25).map(url => {
                     const fileName = url.split('/').pop();
                     return { name: fileName, value: `[Télécharger](${url})`, inline: false };
                 }))

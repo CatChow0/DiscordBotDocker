@@ -12,6 +12,7 @@ services:
       - PAYS_ROLE_ID=${PAYS_ROLE_ID}
       - MOBUTU_ROLE_ID=${MOBUTU_ROLE_ID}
       - MOBUTU_USER_ID=${MOBUTU_USER_ID}
+      - CI_SECRET=${CI_SECRET}
       - AC_CONTAINER_NAME=acevo-dedicated
       - AC_COMPOSE_DIR=/home/shiba/Documents/ace
       - AC_COMPOSE_FILE=/home/shiba/Documents/ace/docker-compose.yml

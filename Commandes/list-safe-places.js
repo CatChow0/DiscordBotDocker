@@ -1,5 +1,6 @@
 const { EmbedBuilder, PermissionFlagsBits } = require('discord.js');
 const safePlaceManager = require('../safePlaceManager');
+const config = require('../config');
 
 module.exports = {
     name: 'list-safe-places',
@@ -10,7 +11,7 @@ module.exports = {
 
     async run(bot, interaction, args) {
         try {
-            const requiredRoleId = "522799905073266698";
+            const requiredRoleId = config.adminRoleId;
             if (!interaction.member.roles.cache.has(requiredRoleId)) {
                 return await interaction.reply({
                     content: '❌ Vous n\'avez pas les permissions nécessaires pour utiliser cette commande.',
