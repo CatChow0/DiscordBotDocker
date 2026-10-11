@@ -77,6 +77,13 @@ module.exports = {
         }
         return val;
     },
+    // All saved original nicknames for a guild: [{ userId, nickname }]
+    listForGuild: (guildId) => {
+        const prefix = `${guildId}:`;
+        return Object.entries(store)
+            .filter(([k]) => k.startsWith(prefix))
+            .map(([k, nickname]) => ({ userId: k.slice(prefix.length), nickname }));
+    },
     // expose for debugging
     _persistenceEnabled: () => persistenceEnabled,
     _storePath: () => STORE_PATH

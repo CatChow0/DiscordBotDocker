@@ -23,7 +23,5 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - /home/shiba/Documents/ace:/home/shiba/Documents/ace
-      - bot-data:/app/data
-
-volumes:
-  bot-data:
+      # Dossier fixe de l'hôte : les salons temporaires et pseudos survivent aux redéploiements
+      - /home/shiba/Documents/discordbot-data:/app/data
