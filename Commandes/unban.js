@@ -1,7 +1,7 @@
 const Discord = require('discord.js')
 
 module.exports = {
-    
+
     name: "unban",
     description: "Unban un membre",
     permission: Discord.PermissionFlagsBits.BanMembers,
@@ -11,7 +11,7 @@ module.exports = {
         {
             type: "user",
             name: "utilisateur",
-            description: "l'utilisateur' a débannir",
+            description: "l'utilisateur a débannir",
             required: true,
         }, {
             type: "string",
@@ -23,28 +23,17 @@ module.exports = {
 
     async run(bot, message, args) {
 
-        try {
+        let user = args.getUser("utilisateur")
+        if(!user) return message.reply("Pas d'utilisateur !")
 
-            let user = args.getUser("utilisateur")
-            if(!user) return message.reply("Pas d'utilisateur !")
+        let reason = args.getString("raison") || "Pas de raison fournie."
 
-            let reason = args.getReason("raison")
-            if(!reason) return message.reply("Pas de raison fournie.")
+        if(!(await message.guild.bans.fetch(user.id).catch(() => null))) return message.reply("Cet utilisateur n'est pas banni !")
 
-            if(!(await message.guild.ban.fetch()).get(user.id)) return message.reply("Cet utilisateur n'est pas banni !")
+        await message.guild.bans.remove(user, reason)
 
-            try {await user.send(`Tu as été unban par ${message.user.tag} pour la raison : \`${reason}\``)} catch (err) {}
+        await message.reply(`${message.user} a unban ${user.tag} pour la raison : \`${reason}\``)
 
-            await message.reply(`${message.user} a unban ${user.tag} pour la raison : \`${reason}\``)
-
-            await message.guild.unban(user, reason)
-
-
-        } catch (err) {
-
-            return message.reply("Pas d'utilisatuer")
-        }
-        
-
+        try {await user.send(`Tu as été unban de ${message.guild.name} par ${message.user.tag} pour la raison : \`${reason}\``)} catch (err) {}
     }
 }

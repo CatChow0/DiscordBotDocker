@@ -1,7 +1,7 @@
 const Discord = require('discord.js')
 
 module.exports = {
-    
+
     name: "ban",
     description: "ban un membre",
     permission: Discord.PermissionFlagsBits.BanMembers,
@@ -23,29 +23,23 @@ module.exports = {
 
     async run(bot, message, args) {
 
-        try{
+        let user = args.getUser("membre")
+        if (!user) return message.reply("Pas de membre a bannir !")
+        let member = await message.guild.members.fetch(user.id).catch(() => null)
 
-            let user = await bot.users.fetch(args._hoistedOptions[0].value)
-            if (!user) return message.reply("Pas de membre a bannire !")
-            let member = message.guild.members.cache.get(user.id)
+        let reason = args.getString("raison") || "Pas de raison fournie."
 
-            let reason = args.getString("raison")
-            if(!reason) reason = "Pas de raison fournie.";
+        if(message.user.id === user.id) return message.reply("Essaie pas de te bannir !")
+        if(message.guild.ownerId === user.id) return message.reply("Ne ban pas le propriétaire du serveur")
+        if(member && !member.bannable) return message.reply("Je ne peux pas bannir ce membre !")
+        if(member && message.member.roles.highest.comparePositionTo(member.roles.highest) <= 0) return message.reply("Tu ne peux pas bannir ce membre !")
+        if(await message.guild.bans.fetch(user.id).catch(() => null)) return message.reply("Ce membre est déjà ban !")
 
-            if(message.user.id === user.id) return message("Essaie pas de te bannir !")
-            if((await message.guild.fetchOwner()).id === user.id) return message.reply("Ne ban pas le propriétaire du serveur")
-            if(member && !member.bannable) return message.reply("Je ne peux pas bannir ce membre !")
-            if(member && message.member.roles.highest.comparePositionTo(member.roles.highest) <= 0) return message.reply("Tu ne peux pas bannir ce membre !")
-            if((await message.guild.bans.fetch()).get(user.id)) return message.reply("Ce membre est déjà ban !")
+        // Le MP doit partir avant le ban : après, le bot ne partage plus de serveur avec l'utilisateur
+        try {await user.send(`Tu as été banni du serveur ${message.guild.name} par ${message.user.tag} pour la raison : \`${reason}\``)} catch(err) {}
 
-            try {await user.send(`Tu as été banni du serveur ${message.guild.name} par ${message.user.tag} pour la raison : \`${reason}\``)} catch(err) {}
+        await message.guild.bans.create(user.id, {reason: reason})
 
-            await message.reply(`${message.user} a banni ${user.tag} pour la raison : \`${reason}\` `)
-
-            await message.guild.bans.create(user.id, {reason: reason})
-
-        } catch (err) {
-            return message.reply("Pas de membre a bannire !")
-        }
+        await message.reply(`${message.user} a banni ${user.tag} pour la raison : \`${reason}\` `)
     }
 }

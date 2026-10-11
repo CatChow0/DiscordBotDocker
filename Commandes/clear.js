@@ -1,7 +1,7 @@
 const Discord = require("discord.js")
 
 module.exports = {
-    
+
     name: "clear",
     description: "Efface les messages",
     permission: Discord.PermissionFlagsBits.ManageMessages,
@@ -9,10 +9,12 @@ module.exports = {
     category: "Modération",
     options: [
         {
-            type: "number",
+            type: "Integer",
             name: "nombre",
-            description: "Le nombre de messages à supprimer",
+            description: "Le nombre de messages à supprimer (1-100)",
             required: true,
+            minValue: 1,
+            maxValue: 100
         }, {
             type: "channel",
             name: "salon",
@@ -23,29 +25,19 @@ module.exports = {
 
     async run(bot, message, args) {
 
-        let channel = args.getChannel("salon")
-        if(!channel) channel = message.channel;
-        if(channel.id !== message.channel.id && !message.guild.channels.get(channel.id)) return message.reply("Pas de salon !")
+        let channel = args.getChannel("salon") || message.channel
+        if(!channel.isTextBased() || !message.guild.channels.cache.has(channel.id)) return message.reply("Pas de salon !")
 
-        let number = args.getNumber("nombre")
-        if(parseInt(number) <= 0 || parseInt(number) > 100) return message.reply("Il faut un nombre entre `0` et `100` inclus ! ")
+        let number = args.getInteger("nombre")
 
-        await message.deferReply()
+        await message.deferReply({ flags: Discord.MessageFlags.Ephemeral })
 
-        try {
+        // filterOld = true : ignore les messages de plus de 14 jours au lieu d'échouer
+        let messages = await channel.bulkDelete(number, true)
 
-            let messages = await channel.bulkDelete(parseInt(number))
+        if(messages.size === 0) return message.editReply("Aucun message supprimable (Discord refuse ceux de plus de 14 jours) !")
+        if(messages.size < number) return message.editReply(`J'ai pu supprimer uniquement \`${messages.size}\` message(s) dans le salon ${channel}  (les autres datent de plus de 14 jours, ou le salon en contient moins).`)
 
-            await message.followUp({content: `J'ai bien supprimé \`${messages.size}\` message(s) dans le salon ${channel} !`, ephemeral: true})
-
-        } catch (err) {
-
-            let messages = [...(await channel.messages.fetch()).filter(msg => !msg.interaction && (Date.now() - msg.createdAt) <= 1209600000).values()]
-            if(messages.length <= 0) return message.followUp("Aucun message à supprimer car ils datent tous de plus de 14 jours !")
-            await channel.bulkDelete(messages)
-
-            await message.followUp({content: `J'ai pu supprimé uniquement \`${message.length}\`  message(s) dans le salon ${channel} car les autres dataient de plus de 14 jours !`, ephemeral: true})
-        }
-        
+        await message.editReply(`J'ai bien supprimé \`${messages.size}\` message(s) dans le salon ${channel} !`)
     }
 }

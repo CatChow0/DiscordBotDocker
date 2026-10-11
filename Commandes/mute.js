@@ -47,12 +47,11 @@ module.exports = {
         if(message.member.roles.highest.comparePositionTo(member.roles.highest) <= 0) return message.reply("Tu ne peux pas mute ce membre !")
         if(member.isCommunicationDisabled()) return message.reply("Ce membre est déjà mute !")
 
-        try {await user.send(`Tu as été mute du serveur ${message.guild.name} par ${message.user.tag} pendant ${time} pour la raison : \`${reason}\``)} catch(err) {}
-       
-        await message.reply(`${message.user} a mute ${user.tag} pendant ${time} pour la raison : \`${reason}\` `)
-
         await member.timeout(ms(time), reason)
 
+        await message.reply(`${message.user} a mute ${user.tag} pendant ${time} pour la raison : \`${reason}\` `)
+
+        try {await user.send(`Tu as été mute du serveur ${message.guild.name} par ${message.user.tag} pendant ${time} pour la raison : \`${reason}\``)} catch(err) {}
 
     }
 }
